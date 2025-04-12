@@ -10,40 +10,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <title>Pick Racer</title>
+    <title>Pick Pursuit</title>
 </head>
 
 <body>
-    <div class="container mt-4 text-center">
-        <!-- 🐾 Logo -->
-        <div class="mb-3">
-            <img src="logo.png" alt="Chewy Logo" class="img-fluid" style="max-height: 80px;">
-        </div>
+    <!-- Set the container to take up 90% of the screen width -->
+    <div class="container" style="max-width: 90%; padding-top: 20px;">
 
         <!-- 🏁 Title -->
-        <h1 class="mb-4">Pick Racer</h1>
+        <h1 class="mb-4 text-center">Pick Pursuit</h1>
 
         <!-- 🎯 Input + Buttons -->
-        <div class="input-wrapper">
+        <div class="input-wrapper mb-4">
             <label for="minHours" class="form-label">Minimum Hours in Path (Default is 2 Hours)</label>
             <input id="minHours" type="text" class="form-control" placeholder="2">
         </div>
 
-        <div class="button-group mb-4">
-            <button id="sortButton" class="btn btn-light">Paste P1 Data</button>
+        <div class="button-group mb-4 text-center">
+            <button id="sortButton" class="btn btn-light">Paste Starting Data</button>
             <button id="resetButton" class="btn btn-danger">🔄 Reset Leaderboard</button>
+            <button id="toggleCompact" class="btn btn-secondary">Compact View</button>
         </div>
 
         <!-- 🏆 Leaderboards -->
-        <div class="row">
-            <div class="col-md-6">
-                <h2 class="text-center">P1 Leaders</h2>
-                <div id="P1Leaders" class="p-3 border rounded bg-light"></div>
+        <div class="container-fluid text-center px-4">
+            <div class="row">
+                <!-- 🟦 P1 Column -->
+                <div class="col">
+                    <h2>Early Leaders</h2>
+                    <div id="P1Leaders" class="leaderboard">
+                        <!-- Header + Entries will be injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- 🟧 P2 Column -->
+                <div class="col">
+                    <h2>Current Standing</h2>
+                    <div id="P2Leaders" class="leaderboard">
+                        <!-- Header + Entries will be injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- 🟩 Most Improved Column -->
+                <div class="col">
+                    <h2>Most Improved</h2>
+                    <div id="MostImproved" class="leaderboard">
+                        <!-- Header + Entries will be injected dynamically -->
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h2 class="text-center">P2 Leaders</h2>
-                <div id="P2Leaders" class="p-3 border rounded bg-light"></div>
-            </div>
+        </div>
+        <!-- 🐾 Logo -->
+        <div class="mb-3 text-center">
+            <img src="logo.png" alt="Chewy Logo" class="img-fluid" style="max-height: 80px;">
         </div>
     </div>
 

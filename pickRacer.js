@@ -2,178 +2,184 @@ window.onload = function () {
     const mainButton = document.getElementById("sortButton");
     const initialTopTen = document.getElementById("P1Leaders");
     const secondTopTen = document.getElementById("P2Leaders");
+    const mostImprovedDiv = document.getElementById("MostImproved");
     const minHours = document.getElementById("minHours");
     const resetButton = document.getElementById("resetButton");
-    resetButton.onclick = resetAll;
+    const toggleCompactBtn = document.getElementById("toggleCompact");
 
-    const trophyIcons = {
-        1: "1stplace.png",
-        2: "2ndplace.png",
-        3: "3rdplace.png"
+    const rankEmojis = {
+        1: "🏆",
+        2: "🥈",
+        3: "🥉"
     };
 
-    let pickerGroupOne = [];
-    let pickerGroupTwo = [];
-    let firstPickerObj = [];
-    let secondPickerObj = [];
+    resetButton.onclick = resetAll;
 
+    let pickerGroupOne = [], pickerGroupTwo = [], firstPickerObj = [], secondPickerObj = [];
     let clicks = 0;
 
+    const renderTableHeader = (parent) => {
+        const header = document.createElement('div');
+        header.classList.add('row', 'fw-bold', 'text-uppercase');
+        header.innerHTML = `
+            <div class="col">Rank</div>
+            <div class="col">Name</div>
+            <div class="col">UPH</div>
+            ${parent === secondTopTen ? '<div class="col">Movement</div>' : ''}
+        `;
+        parent.appendChild(header);
+    };
+
     mainButton.onclick = async function () {
-        if (minHours.value === "") {
-            minHours.value = 2;
-        }
+        if (minHours.value === "") minHours.value = 2;
 
         try {
             const clipboardText = await navigator.clipboard.readText();
-
             if (!clipboardText.includes("Chewy Labor Management System")) {
                 alert("Please ensure clipboard data is from CLMS.");
                 return;
             }
 
-            if (!clipboardText) {
-                alert("There is no data in your clipboard 😕");
-                return;
-            }
-
-            let split = clipboardText.split(/\n/);
-            let removeStartText = split.slice(21);
-
+            let split = clipboardText.split(/\n/).slice(21);
             let currentGroup = clicks === 0 ? pickerGroupOne : pickerGroupTwo;
             let currentObj = clicks === 0 ? firstPickerObj : secondPickerObj;
 
-            removeStartText.map((item) => {
-                let eachPicker = item.split(/\s+/);
-                eachPicker.map((value, index) => {
-                    if (index === 0 || index === 1 || index === 4 || index === 6)
-                        currentGroup.push(value);
-                });
+            split.forEach(item => {
+                let each = item.split(/\s+/);
+                if (each.length >= 7) {
+                    currentGroup.push({
+                        name: `${each[0]} ${each[1]}`,
+                        hours: each[4],
+                        UPH: each[6]
+                    });
+                }
             });
 
-            for (let i = 0; i < currentGroup.length; i += 4) {
-                if (i + 3 < currentGroup.length) {
-                    const obj = {
-                        name: currentGroup[i] + " " + currentGroup[i + 1],
-                        hours: currentGroup[i + 2],
-                        UPH: currentGroup[i + 3]
-                    };
-                    currentObj.push(obj);
-                }
-            }
+            currentGroup.forEach(p => {
+                if (parseFloat(p.hours) >= parseFloat(minHours.value)) currentObj.push(p);
+            });
 
-            let topTen = currentObj
-                .filter(picker => parseFloat(picker.hours) >= parseFloat(minHours.value))
-                .sort((a, b) => b.UPH - a.UPH)
-                .slice(0, 10);
-
-            if (topTen.length < 1) {
-                alert("Not enough data. Please adjust hours or check CLMS filters.");
-                return;
-            }
-
-            topTen = topTen.map((picker, index) => ({
-                ...picker,
-                rank: index + 1
-            }));
+            currentObj.sort((a, b) => b.UPH - a.UPH);
+            const topTen = currentObj.slice(0, 10).map((p, i) => ({ ...p, rank: i + 1 }));
 
             if (clicks === 0) {
-                // 🟦 First paste
-                topTen.forEach((item) => {
-                    const rankClass = `rank-${item.rank <= 3 ? item.rank : ""}`;
-                    const trophyImg = trophyIcons[item.rank]
-                        ? `<img src="${trophyIcons[item.rank]}" alt="Trophy" style="height: 20px; margin-left: 5px;">`
-                        : "";
-
+                renderTableHeader(initialTopTen);
+                topTen.forEach(p => {
+                    const rankClass = `rank-${p.rank <= 3 ? p.rank : ""}`;
                     $(initialTopTen).append(`
                         <div class='row mb-2 ${rankClass}'>
-                            <div class='col d-flex justify-content-between'>
-                                <div><strong>Rank:</strong> ${item.rank}</div>
-                                <div><strong>Name:</strong> ${item.name}</div>
-                                <div><strong>UPH:</strong> ${item.UPH} ${trophyImg}</div>
-                            </div>
+                            <div class='col'>${p.rank}</div>
+                            <div class='col'>${p.name}</div>
+                            <div class='col'>${p.UPH}</div>
                         </div>
                     `);
                 });
+                mainButton.textContent = "Paste Current Data";
+            } else {
+                renderTableHeader(secondTopTen);
 
-                mainButton.textContent = "Paste P2 Data";
+                const previousRanks = {};
+                firstPickerObj.forEach((p, i) => {
+                    previousRanks[p.name] = i + 1;
+                });
 
-            } else if (clicks === 1) {
+                const allP2 = [...secondPickerObj].sort((a, b) => b.UPH - a.UPH);
+                const allP1 = [...firstPickerObj].sort((a, b) => b.UPH - a.UPH);
 
-                const firstRankMap = {};
-                firstPickerObj
-                    .filter(picker => parseFloat(picker.hours) >= parseFloat(minHours.value))
-                    .sort((a, b) => b.UPH - a.UPH)
-                    .slice(0, 10)
-                    .forEach((picker, index) => {
-                        firstRankMap[picker.name] = index + 1;
-                    });
+                const movementData = allP2.map((p, index) => {
+                    const prevIndex = allP1.findIndex(x => x.name === p.name);
+                    const movement = prevIndex === -1 ? null : prevIndex - index;
+                    return {
+                        ...p,
+                        rank: index + 1,
+                        movement: movement
+                    };
+                });
 
-                topTen.forEach((item) => {
-                    const previousRank = firstRankMap[item.name];
-                    let movement = '';
-                    let movementClass = '';
-                    let rankClass = `rank-${item.rank <= 3 ? item.rank : ""}`;
-                    const trophyImg = trophyIcons[item.rank]
-                        ? `<img src="${trophyIcons[item.rank]}" alt="Trophy" style="height: 20px; margin-left: 5px;">`
-                        : "";
+                const improved = movementData
+                    .filter(m => m.movement > 0)
+                    .sort((a, b) => b.movement - a.movement)
+                    .slice(0, 5);
 
-                    if (previousRank) {
-                        const diff = previousRank - item.rank;
-                        if (diff > 0) {
-                            movement = `↑${diff}`;
-                            movementClass = 'rank-up';
-                        } else if (diff < 0) {
-                            movement = `↓${Math.abs(diff)}`;
-                            movementClass = 'rank-down';
-                        } else {
-                            movement = '—';
-                            movementClass = 'rank-same';
-                        }
-                    } else {
-                        movement = '🆕';
+                movementData.slice(0, 10).forEach(p => {
+                    let movementText = '—', movementClass = 'rank-same';
+                    if (p.movement > 0) {
+                        movementText = `↑${p.movement}`;
+                        movementClass = 'rank-up';
+                    } else if (p.movement < 0) {
+                        movementText = `↓${Math.abs(p.movement)}`;
+                        movementClass = 'rank-down';
+                    } else if (p.movement === null) {
+                        movementText = '🆕';
                         movementClass = 'rank-new';
                     }
 
+                    const rankClass = `rank-${p.rank <= 3 ? p.rank : ""}`;
+                    const rankEmoji = rankEmojis[p.rank] || '';  // Add the rank emoji
+                    const rocketEmoji = p.movement > 0 ? ' 🚀' : '';  // Rocket for movement up
                     $(secondTopTen).append(`
-                        <div class='row mb-2 ${movementClass} ${rankClass}' data-movement="${movementClass}">
-                            <div class='col d-flex justify-content-between'>
-                                <div><strong>Rank:</strong> ${item.rank}</div>
-                                <div><strong>Name:</strong> ${item.name}</div>
-                                <div><strong>UPH:</strong> ${item.UPH} ${trophyImg}</div>
-                                <div><strong>Movement:</strong> <span class="${movementClass}-text">${movement}</span></div>
+                        <div class='row mb-2 ${rankClass} ${movementClass}'>
+                            <div class='col'>${p.rank} ${rankEmoji} ${rocketEmoji}</div>
+                            <div class='col'>${p.name}</div>
+                            <div class='col'>${p.UPH}</div>
+                            <div class='col'>
+                                <span class="${movementClass}-text">${movementText}</span>
                             </div>
                         </div>
                     `);
                 });
 
-                // 🔁 Animation repeater
-                setInterval(() => {
-                    const rows = document.querySelectorAll('#P2Leaders .row[data-movement]');
-                    rows.forEach(row => {
-                        const movementClass = row.getAttribute('data-movement');
-                        row.classList.remove(movementClass);
-                        void row.offsetWidth; // Trigger reflow
-                        row.classList.add(movementClass);
-                    });
-                }, 10000);
+                const UPHMapP1 = {};
+                firstPickerObj.forEach(p => {
+                    UPHMapP1[p.name] = parseFloat(p.UPH);
+                });
+
+                const improvementData = secondPickerObj
+                    .filter(p => UPHMapP1[p.name] && parseFloat(UPHMapP1[p.name]) > 0)
+                    .map(p => {
+                        const oldUPH = UPHMapP1[p.name];
+                        const newUPH = parseFloat(p.UPH);
+                        const changePercent = ((newUPH - oldUPH) / oldUPH) * 100;
+                        const changeUPH = newUPH - oldUPH;
+                        return {
+                            ...p,
+                            improvementPercent: changePercent,
+                            changeUPH: changeUPH
+                        };
+                    })
+                    .filter(p => p.improvementPercent > 0)
+                    .sort((a, b) => b.improvementPercent - a.improvementPercent)
+                    .slice(0, 5);
+
+                renderTableHeader(mostImprovedDiv);
+                improvementData.forEach((p, index) => {
+                    $(mostImprovedDiv).append(`
+                        <div class='row mb-2'>
+                            <div class='col'>${index + 1} 🚀</div>
+                            <div class='col'>${p.name}</div>
+                            <div class='col'>${p.improvementPercent.toFixed(1)}% (${p.changeUPH.toFixed(1)})</div>
+                        </div>
+                    `);
+                });
             }
 
             clicks++;
         } catch (err) {
             console.error("Clipboard read failed:", err);
-            alert("Could not read from clipboard. Make sure the site has clipboard permissions.");
+            alert("Clipboard read failed. Please allow permission.");
         }
     };
 
+    toggleCompactBtn.onclick = function () {
+        document.body.classList.toggle("compact-mode");
+
+        // Optionally change button label
+        toggleCompactBtn.textContent = document.body.classList.contains("compact-mode")
+            ? "Standard View"
+            : "Compact View";
+    };
+
     function resetAll() {
-        pickerGroupOne = [];
-        pickerGroupTwo = [];
-        firstPickerObj = [];
-        secondPickerObj = [];
-        clicks = 0;
-        mainButton.textContent = "Paste P1 Data";
-        initialTopTen.innerHTML = "";
-        secondTopTen.innerHTML = "";
+        location.reload();
     }
 };
