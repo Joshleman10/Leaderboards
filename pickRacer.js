@@ -21,10 +21,16 @@ window.onload = function () {
     const renderTableHeader = (parent) => {
         const header = document.createElement('div');
         header.classList.add('row', 'fw-bold', 'text-uppercase');
+
+        let uphLabel = "UPH";
+        if (parent === mostImprovedDiv) {
+            uphLabel = "% Change";
+        }
+
         header.innerHTML = `
             <div class="col">Rank</div>
             <div class="col">Name</div>
-            <div class="col">UPH</div>
+            <div class="col">${uphLabel}</div>
             ${parent === secondTopTen ? '<div class="col">Movement</div>' : ''}
         `;
         parent.appendChild(header);
@@ -164,6 +170,9 @@ window.onload = function () {
             }
 
             clicks++;
+            if (clicks === 2) {
+                mainButton.style.display = "none"; // Hide after 2nd click
+            }
         } catch (err) {
             console.error("Clipboard read failed:", err);
             alert("Clipboard read failed. Please allow permission.");
