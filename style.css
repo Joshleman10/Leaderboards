@@ -226,3 +226,13 @@ body.compact-mode .col {
         flex: 1 1 100%;
     }
 }
+
+#P1Leaders .row.rank-1,
+#P2Leaders .row.rank-1,
+#P1Leaders .row.rank-2,
+#P2Leaders .row.rank-2,
+#P1Leaders .row.rank-3,
+#P2Leaders .row.rank-3 {
+    color: #000 !important;
+    text-shadow: none;
+}
