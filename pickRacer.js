@@ -18,13 +18,37 @@ window.onload = function () {
     let pickerGroupOne = [], pickerGroupTwo = [], firstPickerObj = [], secondPickerObj = [];
     let clicks = 0;
 
+    // Create and insert the footer once
+    const infoFooter = document.createElement('div');
+    infoFooter.id = "infoFooter";
+    infoFooter.classList.add('mt-4');
+    mostImprovedDiv.parentElement.appendChild(infoFooter); // Aligns under both tables
+
+    const updateInfoFooter = () => {
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        infoFooter.innerHTML = `
+            <div class="fst-italic text-muted mb-2">Information updated at: ${formattedTime}</div>
+            <div class="symbol-key">
+                <strong>Symbol Key:</strong>
+                <ul class="small ps-3 mb-0">
+                    <li>🏆 / 🥈 / 🥉 – Top 3 performers</li>
+                    <li>↑ / ↓ – Change in position since previous data</li>
+                    <li>🚀 – Improvement or upward movement</li>
+                    <li>New – Newly ranked</li>
+                </ul>
+            </div>
+        `;
+    };
+
     const renderTableHeader = (parent) => {
         const header = document.createElement('div');
         header.classList.add('row', 'fw-bold', 'text-uppercase');
 
         let uphLabel = "UPH";
         if (parent === mostImprovedDiv) {
-            uphLabel = "% Change";
+            uphLabel = "Change";
         }
 
         header.innerHTML = `
@@ -81,6 +105,7 @@ window.onload = function () {
                     `);
                 });
                 mainButton.textContent = "Paste Current Data";
+                updateInfoFooter(); // Show timestamp + key on first paste
             } else {
                 renderTableHeader(secondTopTen);
 
@@ -121,15 +146,21 @@ window.onload = function () {
                     }
 
                     const rankClass = `rank-${p.rank <= 3 ? p.rank : ""}`;
-                    const rankEmoji = rankEmojis[p.rank] || '';  // Add the rank emoji
-                    const rocketEmoji = p.movement > 0 ? ' 🚀' : '';  // Rocket for movement up
+                    const showEmojiOnly = p.rank <= 3;
+                    const rankDisplay = showEmojiOnly ? `${rankEmojis[p.rank]}` : p.rank;
+                    const rocketEmoji = p.movement > 0 ? ' 🚀' : '';
+
+                    const isTop3 = p.rank <= 3;
+                    const textColorClass = isTop3 ? 'black-text' : '';
+                    const movementTextColorClass = isTop3 ? 'black-text' : `${movementClass}-text`;
+
                     $(secondTopTen).append(`
-                        <div class='row mb-2 ${rankClass} ${movementClass}'>
-                            <div class='col'>${p.rank} ${rankEmoji} ${rocketEmoji}</div>
+                        <div class='row mb-2 ${rankClass} ${movementClass} ${textColorClass}'>
+                            <div class='col'>${rankDisplay}${rocketEmoji}</div>
                             <div class='col'>${p.name}</div>
                             <div class='col'>${p.UPH}</div>
                             <div class='col'>
-                                <span class="${movementClass}-text">${movementText}</span>
+                                <span class="${movementTextColorClass}">${movementText}</span>
                             </div>
                         </div>
                     `);
@@ -167,11 +198,13 @@ window.onload = function () {
                         </div>
                     `);
                 });
+
+                updateInfoFooter(); // Show timestamp + key on second paste
             }
 
             clicks++;
             if (clicks === 2) {
-                mainButton.style.display = "none"; // Hide after 2nd click
+                mainButton.style.display = "none";
             }
         } catch (err) {
             console.error("Clipboard read failed:", err);
@@ -181,8 +214,6 @@ window.onload = function () {
 
     toggleCompactBtn.onclick = function () {
         document.body.classList.toggle("compact-mode");
-
-        // Optionally change button label
         toggleCompactBtn.textContent = document.body.classList.contains("compact-mode")
             ? "Standard View"
             : "Compact View";

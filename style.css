@@ -236,3 +236,26 @@ body.compact-mode .col {
     color: #000 !important;
     text-shadow: none;
 }
+
+.black-text {
+    color: black !important;  /* Force black color for the text */
+}
+
+#infoFooter {
+    max-width: 800px;
+    margin: 2rem auto 0;
+}
+
+.symbol-key ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.symbol-key li::before {
+    content: "• ";
+    color: #6c757d;
+}
+
+.black-text {
+    color: #000 !important;
+}
