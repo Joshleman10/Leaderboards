@@ -116,7 +116,7 @@ window.onload = function () {
                         movementText = `↓${Math.abs(p.movement)}`;
                         movementClass = 'rank-down';
                     } else if (p.movement === null) {
-                        movementText = '🆕';
+                        movementText = 'New';
                         movementClass = 'rank-new';
                     }
 
